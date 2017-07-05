@@ -8,8 +8,8 @@ def sigmoid(x):
     :param x: array-like shape(n_sample, n_feature)
     :return: simgoid value (array like)
     """
+    return 1 / (1 + np.exp(-x))
 
-    #TODO sigmoid function
 
 
 def dsigmoid(x):
@@ -18,7 +18,7 @@ def dsigmoid(x):
     :param x: array-like shape(n_sample, n_feature)
     :return: derivative value (array like)
     """
-    #TODO dsigmoid function
+    return sigmoid(x) * (1 - sigmoid(x))
 
 
 def tanh(x):
@@ -27,7 +27,8 @@ def tanh(x):
     :param x: array-like shape(n_sample, n_feature)
     :return: tanh value (array like)
     """
-    #TODO tanh function
+    denominator = 1 + np.exp(-2 * x)
+    return 2 / denominator - 1
 
 
 def dtanh(x):
@@ -36,7 +37,7 @@ def dtanh(x):
     :param x: array-like shape(n_sample, n_feature)
     :return: derivative value (array like)
     """
-    #TODO dtanh function
+    return 1 - tanh(x) ** 2
 
 
 def softmax(X):
@@ -45,7 +46,17 @@ def softmax(X):
     :param X:
     :return:
     """
-    #TODO softmax function
+    """
+    e ^ (x - max(x)) / sum(e^(x - max(x))
+
+    By using the fact that a^(b - c) = (a^b)/(a^c) we have
+    
+    = e ^ x / e ^ max(x) * sum(e ^ x / e ^ max(x))
+    
+    = e ^ x / sum(e ^ x)
+    
+    """
+    return np.exp(X) / np.sum(np.exp(X), axis=0)
 
 
 class MLP:
@@ -161,6 +172,7 @@ class MLP:
             for batch in xrange(0, n_samples, self.batch_size):
                 #TODO call forward function
                 #TODO call backward function
+                pass
 
             if i % self.verbose == 0:
                 # Compute Loss and Training Accuracy
@@ -287,13 +299,15 @@ def sklearn_mlp():
 
 
 def main():
+    # print(sigmoid(0) == 0.5)
+    # print(dsigmoid(0) == 0.5 * 0.5)
     print('Class 2 Multiple Layer Perceptron (MLP) Example')
-    my_mlp()
+    # my_mlp()
 
     print ('')
 
     print('Class 2 sklearn MLP Example')
-    sklearn_mlp()
+    # sklearn_mlp()
 
 
 if __name__ == "__main__":
