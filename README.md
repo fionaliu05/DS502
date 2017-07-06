@@ -1,7 +1,7 @@
 ## Run time python2.7.13
 
 
-### performance test
+### mymlp performance test
 
 ###### Class 2 Multiple Layer Perceptron (MLP) Example
 ###### Test Accuracy: 0.9326599326599325
