@@ -279,9 +279,9 @@ class MLP:
 
         pred = self.forward(X)
 
-        cnt_list = pred.argmax(axis=1) == np.ravel(y)
+        result_list = pred.argmax(axis=1) == np.ravel(y)
 
-        return np.sum(cnt_list * 1.0 / n_samples)
+        return np.sum(result_list * 1.0 / n_samples)
 
 
 
