@@ -321,7 +321,7 @@ def main():
     print('Class 2 Multiple Layer Perceptron (MLP) Example')
     my_mlp()
 
-    print('')
+    print('=============================================')
 
     print('Class 2 sklearn MLP Example')
     sklearn_mlp()
