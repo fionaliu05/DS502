@@ -1,4 +1,4 @@
-## Run time python2.7.13
+## Run time python2.7.13 or 3.6.1
 
 
 ### mymlp performance test for tanh and sigmoid
