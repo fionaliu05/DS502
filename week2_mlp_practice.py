@@ -10,8 +10,6 @@ def sigmoid(x):
     """
     return 1.0 / (1 + np.exp(-x))
 
-#
-#
 def dsigmoid(x):
     """
     Derivative of sigmoid function
@@ -29,7 +27,7 @@ def tanh(x):
     """
     denominator = 1.0 + np.exp(-2 * x)
     return 2 / denominator - 1
-#
+
 
 def dtanh(z):
     """
