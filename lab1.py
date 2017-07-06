@@ -2,6 +2,61 @@ import numpy as np
 from sklearn.utils import shuffle
 from random import seed
 
+#
+# def onehot(y):
+#     n = len(np.unique(y))
+#     m = y.shape[0]
+#     b = np.zeros((m, n))
+#     for i in range(m):
+#         b[i, y[i]] = 1
+#     return b
+#
+#
+# def sigmoid(x):
+#     """
+#     Sigmoid (logistic) function
+#     :param x: array-like shape(n_sample, n_feature)
+#     :return: simgoid value (array like)
+#     """
+#
+#     # TODO sigmoid function
+#     return 1. / (1. + np.exp(-x))
+#
+
+# def dsigmoid(x):
+#     """
+#     Derivative of sigmoid function
+#     :param x: array-like shape(n_sample, n_feature)
+#     :return: derivative value (array like)
+#     """
+#     # TODO dsigmoid function
+#     dsig = x * (1 - x)
+#     return dsig
+
+#
+# def tanh(x):
+#     """
+#     Tanh function
+#     :param x: array-like shape(n_sample, n_feature)
+#     :return: tanh value (array like)
+#     """
+#     # TODO tanh function
+#     return np.tanh(x)
+#
+#
+# def dtanh(x):
+#     """
+#     Derivative of tanh function
+#     :param x: array-like shape(n_sample, n_feature)
+#     :return: derivative value (array like)
+#     """
+#     # TODO dtanh function
+#     return 1.0 - x ** 2
+#
+
+
+
+
 def sigmoid(x):
     """
     Sigmoid (logistic) function
@@ -38,6 +93,25 @@ def dtanh(z):
     :return: derivative value (array like)
     """
     return 1.0 - np.power(tanh(z), 2)
+
+
+# def softmax(X):
+#     """
+#     softmax function
+#     :param X:
+#     :return:
+#     """
+#     """
+#     e ^ (x - max(x)) / sum(e^(x - max(x))
+#
+#     By using the fact that a^(b - c) = (a^b)/(a^c) we have
+#
+#     = e ^ x / e ^ max(x) * sum(e ^ x / e ^ max(x))
+#
+#     = e ^ x / sum(e ^ x)
+#
+#     """
+#     return np.exp(X) / np.sum(np.exp(X), axis=0)
 
 def softmax(X):
     """
@@ -160,11 +234,10 @@ class MLP:
 
         # main loop
         for i in range(max_epochs):
-            if shuffle_data:
-                index_set = np.asarray(range(0, X.shape[0]))
-                np.random.shuffle(index_set)
-                X = X[index_set, :]
-                y = y[index_set]
+            index_set = np.asarray(range(0, X.shape[0]))
+            np.random.shuffle(index_set)
+            X = X[index_set, :]
+            y = y[index_set]
 
             # iterate every batch
             for batch in range(0, n_samples, self.batch_size):
@@ -173,6 +246,21 @@ class MLP:
 
                 # @TODO call backward function
                 self.backward(X[batch:batch + self.batch_size, :], y[batch:batch + self.batch_size])
+            #
+            # # shuffle data
+            # # TODO shuffle data
+            # if shuffle_data:
+            #     X, y = shuffle(X, y)
+            #
+            # # iterate every batch
+            # for batch in range(0, n_samples, self.batch_size):
+            #     # TODO call forward function
+            #     X_batch = X[batch: (batch + self.batch_size)]
+            #     y_batch = y[batch: (batch + self.batch_size)]
+            #     probs = self.forward(X_batch)
+            #
+            #     # TODO call backward function
+            #     self.backward(X_batch, y_batch)
 
             if i % self.verbose == 0:
                 # Compute Loss and Training Accuracy
@@ -181,6 +269,29 @@ class MLP:
                 print('Epoch {}: loss = {}, accuracy = {}'.format(i, loss, acc))
 
         return self
+
+    def compute_loss_(self, X, y):
+        """
+        Compute loss
+        :param X: data, array-like, shape(n_sample, n_feature)
+        :param y: label, array-like, shape(n_sample, 1)
+        :return: loss value
+        """
+        n_samples = X.shape[0]
+        probs = self.forward(X)
+        y_mat = onehot(y)
+
+        # TODO Calculating the loss
+        loss = -1. / n_samples * np.sum(y_mat * np.log(probs))
+        # loss = np.sum((probs[range(X.shape[0]), y] - 1) ** 2)
+
+        # TODO Add regularization term to loss
+        weight_sum = 0
+        for weights in self.weights:
+            weight_sum += np.sum(weights * weights)
+        loss += self.reg_lambda / 2. * weight_sum
+
+        return loss
 
     def compute_loss(self, X, y):
         """
@@ -200,6 +311,23 @@ class MLP:
         for i in range(0, self.n_layers + 1):
             data_loss += 0.5 * self.reg_lambda * np.sum( np.power(self.weights[i], 2) )
         return 1. / n_samples * data_loss
+
+
+
+    def forward_(self, X):
+        # input layer
+        self.layers[0] = X
+
+        # TODO hidden layers
+        for i in range(self.n_layers):
+            weighted_sum = np.dot(self.layers[i], self.weights[i]) + self.bias[i]
+            self.layers[i + 1] = self.activation_func(weighted_sum)
+
+        # TODO output layer (Note here the activation is using output_layer func)
+        weighted_sum = np.dot(self.layers[-2], self.weights[-1]) + self.bias[-1]
+        self.layers[-1] = self.output_layer(weighted_sum)
+
+        return self.layers[-1]
 
     def forward(self, X):
         # input layer
@@ -224,6 +352,28 @@ class MLP:
         self.layers[-1] = self.output_layer(net)
 
         return self.layers[-1]
+
+    def backward_(self, X, y):
+        if self.loss == 'cross_entropy':
+            self.deltas[-1] = self.layers[-1]
+            # cross_entropy loss backprop
+            self.deltas[-1][range(X.shape[0]), y] -= 1
+            # self.deltas[-1] *= self.activation_dfunc(self.layers[-1])
+
+        # TODO update deltas
+        for i in reversed(range(self.n_layers)):
+            error = np.dot(self.deltas[i + 1], self.weights[i + 1].T)
+            self.deltas[i] = error * self.activation_dfunc(self.layers[i + 1])
+
+        # TODO update weights
+        for l in range(len(self.weights)):
+            # add regularization
+            reg = self.reg_lambda * np.sum(self.weights[l], axis=0)
+            delta_weights = np.dot(self.layers[l].T, self.deltas[l]) + reg.T
+            self.weights[l] += (-self.lr) * delta_weights
+
+            delta_bias = np.sum(self.deltas[l], axis=0)
+            self.bias[l] += (-self.lr) * delta_bias
 
     def backward(self, X, y):
         if self.loss == 'cross_entropy':
@@ -253,6 +403,21 @@ class MLP:
         :return: array-like, predicted probabilities
         """
         return self.forward(X)
+
+    def score_(self, X, y):
+        """
+        compute accuracy
+        :param X: array-like, shape(n_samples, n_features)
+        :param y: ground truth labels array-like, shape(n_samples, 1)
+        :return: float, accuracy
+        """
+        n_samples = X.shape[0]
+
+        # TODO compute accuracy
+        probs = self.predict(X)
+        preds = np.argmax(probs, axis=1)
+        acc = float(np.sum(preds == y) * 1.0 / n_samples)
+        return acc
 
     def score(self, X, y):
         """
@@ -326,7 +491,7 @@ def main():
     print('')
 
     print('Class 2 sklearn MLP Example')
-    sklearn_mlp()
+    # sklearn_mlp()
 
 
 if __name__ == "__main__":
