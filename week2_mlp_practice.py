@@ -19,7 +19,7 @@ def dsigmoid(x):
     :return: derivative value (array like)
     """
     a = sigmoid(x)
-    return np.multiply(a, (1 - a))
+    return a * (1 - a)
 
 
 def tanh(x):
@@ -108,6 +108,9 @@ class MLP:
         self.bias = []      # store bias
         self.layers = []    # store forwarding activation values
         self.deltas = []    # store errors for backprop
+
+        self.dw = []
+        self.db = []
 
     def get_weight_bound(self, fan_in, fan_out):
         """
@@ -240,14 +243,13 @@ class MLP:
             self.deltas[-1][range(X.shape[0]), y] -= 1
 
         # @TODO update deltas
-
         for i in range(self.n_layers, 0, -1):
             a = self.layers[i]
             W = self.weights[i]
             self.deltas[i - 1] = np.dot(self.deltas[i], W.T) * self.activation_dfunc(a)
 
 
-        # @TODO update weights
+        # @TODO update weights, need to improve performance
         for i in range(self.n_layers, -1, -1):
             a = self.layers[i]
             W = self.weights[i]
@@ -257,7 +259,6 @@ class MLP:
 
 
 
-    
     def predict(self, X):
         """
         predicting probability outputs
@@ -274,12 +275,12 @@ class MLP:
         :return: float, accuracy
         """
         n_samples = X.shape[0]
-        
+
         # @TODO compute accuracy
 
         pred = self.forward(X)
 
-        result_list = pred.argmax(axis=1) == np.ravel(y)
+        result_list = pred.argmax(axis=1) == y
 
         return np.sum(result_list * 1.0 / n_samples)
 
