@@ -207,6 +207,7 @@ class MLP:
 
 
 
+
         return 1. / n_samples * data_loss
 
     def forward(self, X):
