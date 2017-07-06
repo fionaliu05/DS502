@@ -43,7 +43,7 @@ def softmax(X):
     :param X:
     :return:
     """
-    # TODO softmax function
+    # @TODO softmax function
     return (np.exp(X).T / np.sum(np.exp(X), axis=1)).T
 
 
