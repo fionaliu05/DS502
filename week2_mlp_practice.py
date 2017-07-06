@@ -18,7 +18,8 @@ def dsigmoid(x):
     :param x: array-like shape(n_sample, n_feature)
     :return: derivative value (array like)
     """
-    return sigmoid(x) * (1 - sigmoid(x))
+    a = sigmoid(x)
+    return np.multiply(a, (1 - a))
 
 
 def tanh(x):
@@ -31,13 +32,13 @@ def tanh(x):
     return 2 / denominator - 1
 
 
-def dtanh(x):
+def dtanh(z):
     """
     Derivative of tanh function
-    :param x: array-like shape(n_sample, n_feature)
+    :param z: array-like shape(n_sample, n_feature)
     :return: derivative value (array like)
     """
-    return 1.0 - tanh(x) ** 2
+    return 1.0 - np.power(tanh(z), 2)
 
 
 def softmax(X):
@@ -167,15 +168,15 @@ class MLP:
 
             # shuffle data
             #TODO shuffle data
-            offset = np.asarray(range(0, X.shape[0]))
-            np.random.shuffle(offset)
-            X = X[offset, :]
-            y = y[offset]
+            index_set = np.asarray(range(0, X.shape[0]))
+            np.random.shuffle(index_set)
+            X = X[index_set, :]
+            y = y[index_set]
 
             # iterate every batch
             for batch in range(0, n_samples, self.batch_size):
                 #@TODO call forward function
-                self.forward(X[batch:batch + self.batch_size, :])
+                self.forward(X[batch : batch + self.batch_size, :])
 
                 #@TODO call backward function
                 self.backward(X[batch:batch + self.batch_size, :], y[batch:batch + self.batch_size])
@@ -197,17 +198,15 @@ class MLP:
         :return: loss value
         """
         n_samples = X.shape[0]
-        probs = self.forward(X)
+        a = self.forward(X)
 
         # @TODO  Calculating the loss
-        a = self.layers[-1]
-        data_loss = 0.5 * (y - a) ** 2
+        y = y.reshape(1, -1)
+        data_loss = np.sum(np.dot(-y, np.log(a)) - np.dot((1 - y), np.log(1 - a)))
 
         # @TODO Add regularization term to loss
-
-
-
-
+        for i in range(0, self.n_layers + 1):
+            data_loss += 0.5 * self.reg_lambda * np.sum( np.power(self.weights[i], 2) )
         return 1. / n_samples * data_loss
 
     def forward(self, X):
@@ -216,20 +215,21 @@ class MLP:
 
         # @TODO hidden layers
 
-        for i in range(1, self.n_layers):
+        for i in range(1, 1 + self.n_layers):
             W = self.weights[i - 1]
             X = self.layers[i - 1]
             b = self.bias[i - 1]
-            net = W * X + b
+            net = np.dot(X, W) + b
             self.layers[i] = self.activation_func(net)
 
         # @TODO output layer (Note here the activation is using output_layer func)
 
-        W = self.weights[-1]
-        X = self.layers[-2]
-        b = self.bias[-1]
-        net = W * X + b
-        self.layers[-1] = softmax(net)
+        last = self.n_layers
+        W = self.weights[last]
+        X = self.layers[last]
+        b = self.bias[last]
+        net = np.dot(X, W) + b
+        self.layers[-1] = self.output_layer(net)
 
         return self.layers[-1]
 
@@ -240,18 +240,20 @@ class MLP:
             self.deltas[-1][range(X.shape[0]), y] -= 1
 
         # @TODO update deltas
-        for i in range(len(self.layers) - 1, 0, -1):
+
+        for i in range(self.n_layers, 0, -1):
             a = self.layers[i]
-            W = self.weights[i - 1]
-            self.deltas[i - 1] =  np.transpose(W) * self.deltas[i] * a * (1 - a)
+            W = self.weights[i]
+            self.deltas[i - 1] = np.dot(self.deltas[i], W.T) * self.activation_dfunc(a)
 
 
         # @TODO update weights
-        for i in range(len(self.layers) - 1, -1, -1):
+        for i in range(self.n_layers, -1, -1):
             a = self.layers[i]
             W = self.weights[i]
             delta = self.deltas[i]
-            W = W - self.lr * delta * a
+            deltaW = np.dot(a.T, delta)
+            W = W - self.lr * deltaW
 
 
 
@@ -338,10 +340,10 @@ def main():
     # print(sigmoid(0) == 0.5)
     # print(dsigmoid(0) == 0.5 * 0.5)
     print('Class 2 Multiple Layer Perceptron (MLP) Example')
-    # my_mlp()
+    my_mlp()
 
     print('Class 2 sklearn MLP Example')
-    sklearn_mlp()
+    # sklearn_mlp()
 
 
 if __name__ == "__main__":
