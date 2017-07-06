@@ -5,13 +5,13 @@
 
 
 
-#### *tanh
+#### 1.tanh
 
 ###### Class 2 Multiple Layer Perceptron (MLP) Example
 ###### Test Accuracy: 0.909090909091
 
 
-#### *sigmoid
+#### 2.sigmoid
 
 ###### Class 2 Multiple Layer Perceptron (MLP) Example
 ###### Test Accuracy: 0.9326599326599325
