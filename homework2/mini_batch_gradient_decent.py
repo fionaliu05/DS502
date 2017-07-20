@@ -2,13 +2,23 @@
 import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
+import pandas as pd
+from sklearn.preprocessing import MinMaxScaler
 
-# 构造训练数据
-x = np.arange(0., 10., 0.2)
-m = len(x)  # 训练数据点数目
-x0 = np.full(m, 1.0)
-input_data = np.vstack([x0, x]).T  # 将偏置b作为权向量的第一个分量
-target_data = 2 * x + 5 + np.random.randn(m)
+data_file = 'https://raw.githubusercontent.com/BitTiger-MP/DS502-AI-Engineer/master/DS502-1702/Jason_course/Week2_Codelab2/pima-indians-diabetes.data.csv'
+col_name_list = ['preg', 'plas', 'pres', 'skin', 'test', 'mass', 'pedi', 'age', 'class']
+data_frame = pd.read_csv(data_file, names=col_name_list)
+array = data_frame.values
+
+scaler = MinMaxScaler(feature_range=(0, 1))
+rescaledX = scaler.fit_transform(array[:, :-1])
+
+input_data = rescaledX
+target_data = array[:, -1]
+
+num_of_records, n_feature = input_data.shape
+
+x = np.arange(num_of_records)
 
 # 两种终止条件
 loop_max = 10000  # 最大迭代次数(防止死循环)
@@ -16,84 +26,52 @@ epsilon = 1e-3
 
 # 初始化权值
 np.random.seed(0)
-w = np.random.randn(2)
-# w = np.zeros(2)
+w = np.random.randn(input_data.shape[1])
 
 alpha = 0.001  # 步长(注意取值过大会导致振荡,过小收敛速度变慢)
 diff = 0.
-error = np.zeros(2)
+error = np.zeros(input_data.shape[1])
 count = 0  # 循环次数
 finish = 0  # 终止标志
 error_list = []
+# batch_size = 128
 
+n_batch = 100
 
-n_batch = 9
-
-if m % n_batch == 0:
-    batch_size = int(m / n_batch)
+if num_of_records % n_batch == 0:
+    batch_size = int(num_of_records / n_batch)
 else:
-    batch_size = int(m / n_batch) + 1
+    batch_size = int(num_of_records / n_batch) + 1
 
-# -----------------------------------------------批量梯度下降法-----------------------------------------------------------
 while count < loop_max:
     count += 1
 
     # 标准梯度下降是在权值更新前对所有样例汇总误差，而随机梯度下降的权值是通过考查某个训练样例来更新的
     # 在标准梯度下降中，权值更新的每一步对多个样例求和，需要更多的计算
-    sum_m = np.zeros(2)
+
     for i in range(n_batch):
+        sum_m = np.zeros(n_feature)
+
         start = i * batch_size
-        end = min((i + 1) * batch_size, m)
+        end = min((i + 1) * batch_size, num_of_records)
 
         for j in range(start, end):
-            print 'j', j
-
             dif = (np.dot(w, input_data[j]) - target_data[j]) * input_data[j]
             sum_m = sum_m + dif  # 当alpha取值过大时,sum_m会在迭代过程中会溢出
 
         w = w - alpha * sum_m  # 注意步长alpha的取值,过大会导致振荡
         error_list.append(np.sum(sum_m)**2)
+
     # 判断是否已收敛
     if np.linalg.norm(w - error) < epsilon:
         finish = 1
         break
     else:
         error = w
-print 'loop count = %d' % count, '\tw:[%f, %f]' % (w[0], w[1])
-
-# ----------------------------------------------------------------------------------------------------------------------
-
 
 # check with scipy linear regression
 slope, intercept, r_value, p_value, slope_std_error = stats.linregress(x, target_data)
-print 'intercept = %s slope = %s' % (intercept, slope)
+print('intercept = %s slope = %s' % (intercept, slope))
 
-plt.plot(range(len(error_list[0:100])), error_list[0:100])
+plt.plot(range(len(error_list[0:loop_max])), error_list[0:loop_max])
 plt.show()
-
-plt.plot(x, target_data, 'k+')
-plt.plot(x, w[1] * x + w[0], 'r')
-plt.show()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
